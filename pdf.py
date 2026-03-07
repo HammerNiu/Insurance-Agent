@@ -164,16 +164,4 @@ if __name__ == "__main__":
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
-    # 第一步：构建知识库（只需执行一次）
     build_knowledge_base("data/Insurance_Handbook_removed.pdf")
-
-    # 第二步：提问
-    collection = Collection(COLLECTION_NAME)
-
-    while True:
-        question = input("\n请输入问题（q退出）：")
-        if question == "q":
-            break
-
-        answer = answer_question(collection, question)
-        print("\n🤖 回答：\n", answer)
