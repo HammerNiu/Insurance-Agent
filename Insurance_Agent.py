@@ -2,7 +2,8 @@ from pymilvus import connections, Collection
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
-from langchain.agents import create_agent
+from langchain.agents import initialize_agent, AgentType
+from langchain.memory import ConversationBufferWindowMemory
 import os
 from dotenv import load_dotenv
 
@@ -73,24 +74,23 @@ Metadata: {hit.entity.get('metadata')}
 
 llm = ChatOpenAI(model="gpt-4o-mini", api_key=OPENAI_API_KEY)
 
-agent = create_agent(
-    llm,
+# Add conversation memory to remember recent interactions
+memory = ConversationBufferWindowMemory(k=5)  # Remember last 5 exchanges
+
+agent = initialize_agent(
     tools=[search_policy, search_customer],
+    llm=llm,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    memory=memory,
+    verbose=True  # Optional: for debugging
 )
 
 if __name__ == "__main__":
-    messages = []
     while True:
         question = input("\n Question: ")
         if question == "q":
             break
 
-        messages.append(HumanMessage(content=question))
-        response = agent.invoke({
-            "messages": messages
-        })
-
-        answer = response["messages"][-1]
-        print("\n Agent Answer：\n", answer.content)
-
-        messages.append(answer)
+        # Use agent.run for simplicity with memory
+        response = agent.run(question)
+        print("\n Agent Answer：\n", response)

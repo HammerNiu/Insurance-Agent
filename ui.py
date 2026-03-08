@@ -169,8 +169,8 @@ if prompt:
                 add_log("Analyzing user intent...")
                 
                 # Execute RAG Logic
-                response = agent.invoke({"messages": st.session_state.messages})
-                answer = response["messages"][-1]
+                response = agent.invoke({"input": prompt})
+                answer = AIMessage(content=response["output"])
                 
                 # Logic-driven Log Updates
                 if any(x in prompt for x in ["Bruce", "Clark", "Lena", "Peter", "Oliver", "Diana", "Barry"]):
