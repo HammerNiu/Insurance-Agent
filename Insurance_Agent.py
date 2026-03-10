@@ -2,8 +2,7 @@ from pymilvus import connections, Collection
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
-from langchain.agents import initialize_agent, AgentType
-from langchain.memory import ConversationBufferWindowMemory
+from langchain.agents import create_agent
 import os
 from dotenv import load_dotenv
 
@@ -36,12 +35,21 @@ def search_policy(query: str, top_k: int = 3) -> str:
         anns_field="embedding",
         param={"metric_type": "IP", "params": {"ef": 64}},
         limit=top_k,
-        output_fields=["text"]
+        output_fields=["text", "page"]
     )
 
     hits = results[0]
-    return "\n\n".join(hit.entity.get("text") for hit in hits)
 
+    context = "\n\n".join([
+        f"""
+    Source: Insurance Handbook
+    Page: {hit.entity.get('page')}
+
+    {hit.entity.get('text')}
+    """
+        for hit in hits
+    ])
+    return context
 
 @tool
 def search_customer(query: str, top_k: int = 3) -> str:
@@ -74,23 +82,42 @@ Metadata: {hit.entity.get('metadata')}
 
 llm = ChatOpenAI(model="gpt-4o-mini", api_key=OPENAI_API_KEY)
 
-# Add conversation memory to remember recent interactions
-memory = ConversationBufferWindowMemory(k=5)  # Remember last 5 exchanges
+agent = create_agent(
+    llm,
+    tools = [search_policy, search_customer],
+    system_prompt="""
+You are an insurance assistant.
 
-agent = initialize_agent(
-    tools=[search_policy, search_customer],
-    llm=llm,
-    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    memory=memory,
-    verbose=True  # Optional: for debugging
+You have access to the following tools:
+
+search_policy:
+Use this tool when the user asks about insurance policies, coverage,
+terms, exclusions, or explanations of insurance clauses.
+
+search_customer:
+Use this tool when the user asks about customer information,
+such as customer ID, name, policy types, or remarks.
+
+Always use the appropriate tool before answering.
+
+If the answer cannot be found in the tools, say you do not know.
+""",
+
 )
 
 if __name__ == "__main__":
+    messages = []
     while True:
         question = input("\n Question: ")
         if question == "q":
             break
 
-        # Use agent.run for simplicity with memory
-        response = agent.run(question)
-        print("\n Agent Answer：\n", response)
+        messages.append(HumanMessage(content=question))
+        response = agent.invoke({
+            "messages": messages
+        })
+
+        answer = response["messages"][-1]
+        print("\n Agent Answer：\n", answer.content)
+
+        messages.append(answer)
