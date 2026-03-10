@@ -72,16 +72,18 @@ def add_log(message):
 
 # Zero-hallucination Question Bank
 QUESTION_BANK = [
-    ("Bruce Wayne's Assets", "What is the property address and valuation for Bruce Wayne?"),
-    ("Peter Parker's Benefit", "Who is the designated beneficiary of Peter Parker's life insurance?"),
-    ("Clark Kent's Vehicles", "What cars are registered under Clark Kent's name and their model years?"),
-    ("Lena Luthor's Audi", "What is the specific model and year of Lena Luthor's vehicle?"),
-    ("Diana Miller's Portfolio", "List all the insurance types held by Diana Miller."),
-    ("Barry Allen's Premium", "How much is the total premium for Barry Allen?"),
-    ("Oliver Queen's Address", "What is the residential address linked to Oliver Queen's policy?"),
-    ("Standard Claim Flow", "Describe the standard claim process according to the insurance handbook."),
-    ("Common Exclusions", "What are the common exclusion clauses mentioned in the manual?"),
-    ("High-Value Property", "Which customers have property valuations exceeding $800,000?")
+    ("Diana's Policies", "List all the insurance policy types held by Diana Miller."),
+    ("Lena Luthor's Car", "What specific vehicle model and year is registered under Lena Luthor?"),
+    ("John Smith's Beneficiary", "Who is the designated life insurance beneficiary for John Smith?"),
+    ("Bruce Wayne's Address", "What is the insured home address and property value for Bruce Wayne?"),
+
+    ("Auto Coverages", "What are the two basic coverages included in a personal automobile policy?"),
+    ("Define Deductible", "According to the insurance handbook, what is the definition of a deductible?"),
+    ("Flood Damage", "Does a standard homeowners insurance policy cover flood damage?"),
+
+    ("Bruce's Flood Risk", "Bruce Wayne holds a Home Insurance policy. Based on the handbook, is flood damage covered under his standard policy?"),
+    ("Lena's Home Coverage", "Lena Luthor has a Home Insurance policy. According to the manual, what four main things does this typically cover?"),
+    ("Robert's Claim Process", "Robert Johnson has an Auto Insurance policy. If he gets into a car accident, what standard claim process should he follow based on the handbook?")
 ]
 
 if "display_queries" not in st.session_state:
@@ -169,8 +171,8 @@ if prompt:
                 add_log("Analyzing user intent...")
                 
                 # Execute RAG Logic
-                response = agent.invoke({"input": prompt})
-                answer = AIMessage(content=response["output"])
+                response = agent.invoke({"messages": st.session_state.messages})
+                answer = response["messages"][-1]
                 
                 # Logic-driven Log Updates
                 if any(x in prompt for x in ["Bruce", "Clark", "Lena", "Peter", "Oliver", "Diana", "Barry"]):
