@@ -23,4 +23,9 @@ python creating_postgres_database.py
 python first_vector_embedding.py
 python pdf.py
 python Insurance_Agent.py
+streamlit run ui.py
+
+# Evaluate
+```powershell
+python evaluate.py
 ```
