@@ -72,31 +72,13 @@ Metadata: {hit.entity.get('metadata')}
     return context
 
 
-@tool
-def evaluate_response(query: str, response: str) -> str:
-    """Evaluate the relevance of a response to a given query using LLM"""
-    evaluation_prompt = f"""
-    Evaluate the relevance of the following response to the query on a scale of 1-10 (10 being perfectly relevant).
-    Provide a brief explanation.
-
-    Query: {query}
-    Response: {response}
-
-    Evaluation:
-    """
-    
-    llm = ChatOpenAI(model="gpt-4o-mini", api_key=OPENAI_API_KEY)
-    evaluation = llm.invoke(evaluation_prompt)
-    return evaluation.content
-
-
 llm = ChatOpenAI(model="gpt-4o-mini", api_key=OPENAI_API_KEY)
 
 # Add conversation memory to remember recent interactions
 memory = ConversationBufferWindowMemory(k=5)  # Remember last 5 exchanges
 
 agent = initialize_agent(
-    tools=[search_policy, search_customer, evaluate_response],
+    tools=[search_policy, search_customer],
     llm=llm,
     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     memory=memory,
